@@ -13,13 +13,25 @@ class Barber extends Model
 
     public function outlet()
     {
-    return $this->belongsTo(Outlet::class,
-    'id_outlet', 'id_outlet');
+        return $this->belongsTo(Outlet::class,
+            'id_outlet', 'id_outlet');
     }
 
     public function service()
     {
-    return $this->belongsToMany(Service::class,
-    'barberservice', 'id_barber', 'id_service');
+        return $this->belongsToMany(Service::class,
+            'barberservice', 'id_barber', 'id_service');
+    }
+
+    public function schedule()
+    {
+        return $this->hasMany(BarberSchedule::class,
+            'id_barber', 'id_barber');
+    }
+
+    public function booking()
+    {
+        return $this->hasMany(Booking::class,
+            'id_barber', 'id_barber');
     }
 }

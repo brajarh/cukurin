@@ -14,5 +14,4 @@ Route::get('/login', [HomeController::class, 'login']);
 
 
 use App\Http\Controllers\BarberController;
-Route::get('/barber', [BarberController::class, 'index']);
-Route::get('/barber/{id}', [BarberController::class, 'show']);
+require __DIR__.'/fitur.php';
