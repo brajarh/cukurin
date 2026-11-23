@@ -1,6 +1,6 @@
-@include('partials.nav-admin')
+@extends('layouts.app')
+@section('content')
 <h1>Ubah Cabang</h1>
-@include('partials.flash')
 <form method="POST" action="{{ route('outlet.update', $o->id_outlet) }}">
     @csrf
     @method('PUT')
@@ -8,3 +8,4 @@
     <button type="submit">Perbarui</button>
     <a href="{{ route('outlet.index') }}">Batal</a>
 </form>
+@endsection

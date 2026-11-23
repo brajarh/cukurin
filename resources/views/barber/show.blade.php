@@ -1,4 +1,5 @@
-@include('partials.nav-admin')
+@extends('layouts.app')
+@section('content')
 <h1>{{ $b->nama_barber }}</h1>
 <p>Cabang: {{ $b->outlet->nama_outlet }} | HP: {{ $b->no_hp }}</p>
 
@@ -21,3 +22,4 @@
 </ul>
 
 <p><a href="{{ route('barber.edit', $b->id_barber) }}">Ubah</a> | <a href="{{ route('barber.index') }}">Kembali</a></p>
+@endsection

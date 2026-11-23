@@ -1,6 +1,6 @@
-@include('partials.nav-admin')
+@extends('layouts.app')
+@section('content')
 <h1>Daftar Cabang</h1>
-@include('partials.flash')
 
 <form method="GET" action="{{ route('outlet.index') }}">
     <input name="q" value="{{ $cari }}" placeholder="Cari nama/alamat cabang">
@@ -32,3 +32,4 @@
         <tr><td colspan="4">Belum ada data.</td></tr>
     @endforelse
 </table>
+@endsection

@@ -1,6 +1,6 @@
-@include('partials.nav-admin')
+@extends('layouts.app')
+@section('content')
 <h1>Jadwal Kerja Barber</h1>
-@include('partials.flash')
 
 <form method="GET" action="{{ route('jadwal.index') }}">
     <select name="id_barber">
@@ -39,3 +39,4 @@
         <tr><td colspan="5">Belum ada jadwal.</td></tr>
     @endforelse
 </table>
+@endsection

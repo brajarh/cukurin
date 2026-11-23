@@ -1,5 +1,6 @@
+@extends('layouts.app')
+@section('content')
 <h1>Konfirmasi Booking</h1>
-@include('partials.flash')
 <p>Periksa kembali rincian pesanan kamu.</p>
 
 <table border="1" cellpadding="4">
@@ -23,3 +24,4 @@
         <a href="javascript:history.back()">Ubah</a>
     </p>
 </form>
+@endsection
