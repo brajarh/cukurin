@@ -4,7 +4,6 @@ use App\Http\Controllers\HomeController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
-
 // Halaman publik (Guest, baca saja)
 Route::get('/', [HomeController::class, 'landing'])->name('landing');
 Route::get('/about', [HomeController::class, 'about']);
