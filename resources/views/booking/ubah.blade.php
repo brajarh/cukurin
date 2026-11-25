@@ -1,5 +1,6 @@
+@extends('layouts.app')
+@section('content')
 <h1>Ubah Jadwal Booking {{ $b->kode_booking }}</h1>
-@include('partials.flash')
 
 <p>
     {{ $b->service->nama_service }} dengan {{ $b->barber->nama_barber }} ({{ $b->barber->outlet->nama_outlet }})<br>
@@ -63,3 +64,4 @@
     inTanggal.addEventListener('change', muatSlot);
     muatSlot();
 </script>
+@endsection

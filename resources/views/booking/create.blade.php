@@ -1,5 +1,6 @@
+@extends('layouts.app')
+@section('content')
 <h1>Booking Cukur.in</h1>
-@include('partials.flash')
 <p><a href="{{ route('booking.riwayat') }}">Cek status / riwayat booking</a></p>
 
 <form method="POST" action="{{ route('booking.konfirmasi') }}">
@@ -132,3 +133,4 @@
     inTanggal.addEventListener('change', muatSlot);
     isiBarber();
 </script>
+@endsection

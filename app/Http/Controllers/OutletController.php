@@ -11,12 +11,12 @@ class OutletController extends Controller
     public function index(Request $request)
     {
         $cari = $request->query('q');
-
         $data = Outlet::withCount('barber')
             ->when($cari, fn ($qr) => $qr->where('nama_outlet', 'like', "%{$cari}%")
                 ->orWhere('alamat_outlet', 'like', "%{$cari}%"))
             ->orderBy('nama_outlet')
-            ->get();
+            ->paginate(5)
+            ->withQueryString();
 
         return view('outlet.index', compact('data', 'cari'));
     }
@@ -36,14 +36,15 @@ class OutletController extends Controller
 
     public function edit($id)
     {
-        $o = Outlet::findOrFail($id);
-        return view('outlet.edit', compact('o'));
+        $outlet = Outlet::findOrFail($id);
+
+        return view('outlet.edit', compact('outlet'));
     }
 
     public function update(OutletRequest $request, $id)
     {
-        $o = Outlet::findOrFail($id);
-        $o->update($request->validated());
+        $outlet = Outlet::findOrFail($id);
+        $outlet->update($request->validated());
 
         return redirect()->route('outlet.index')
             ->with('success', 'Cabang berhasil diperbarui.');
@@ -52,10 +53,9 @@ class OutletController extends Controller
     public function destroy($id)
     {
         $o = Outlet::findOrFail($id);
-
         if ($o->barber()->exists()) {
             return redirect()->route('outlet.index')
-                ->with('error', 'Cabang tidak bisa dihapus karena masih punya barber.');
+                ->with('error', 'Cabang tidak bisa dihapus karena masih memiliki barber.');
         }
 
         $o->delete();

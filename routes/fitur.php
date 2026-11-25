@@ -5,7 +5,9 @@ use App\Http\Controllers\BarberController;
 use App\Http\Controllers\BarberScheduleController;
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\OutletController;
+use App\Http\Controllers\PembayaranController;
 use App\Http\Controllers\ServiceController;
+use App\Http\Controllers\UlasanController;
 use Illuminate\Support\Facades\Route;
 
 
@@ -54,6 +56,18 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
             Route::delete('/{id}', [AdminBookingController::class, 'destroy'])
                 ->name('destroy');
         });
+
+    // Transaksi T3: Pembayaran
+    Route::get('/pembayaran', [PembayaranController::class, 'index'])
+        ->name('pembayaran.index');
+    Route::get('/pembayaran/{idBooking}/bayar', [PembayaranController::class, 'create'])
+        ->name('pembayaran.create');
+    Route::post('/pembayaran', [PembayaranController::class, 'store'])
+        ->name('pembayaran.store');
+
+    // Transaksi T4: Daftar Ulasan (Admin)
+    Route::get('/admin/ulasan', [UlasanController::class, 'index'])
+        ->name('ulasan.index');
 });
 
 
@@ -89,4 +103,10 @@ Route::middleware(['auth', 'role:pelanggan'])->group(function () {
 
     Route::post('/booking/{kode}/batal', [BookingController::class, 'batal'])
         ->name('booking.batal');
+
+    // Transaksi T4: Tulis Ulasan (Pelanggan)
+    Route::get('/ulasan/{idBooking}/tulis', [UlasanController::class, 'create'])
+        ->name('ulasan.create');
+    Route::post('/ulasan', [UlasanController::class, 'store'])
+        ->name('ulasan.store');
 });

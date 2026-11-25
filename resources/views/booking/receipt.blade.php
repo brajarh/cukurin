@@ -1,5 +1,6 @@
+@extends('layouts.app')
+@section('content')
 <h1>Bukti Pemesanan</h1>
-@include('partials.flash')
 
 <h2>Kode Booking: {{ $b->kode_booking }}</h2>
 <p>Simpan kode ini untuk cek status, mengubah, atau membatalkan booking.</p>
@@ -32,3 +33,4 @@
     <a href="{{ route('booking.riwayat') }}">Riwayat booking</a> |
     <a href="{{ route('booking.create') }}">Booking baru</a>
 </p>
+@endsection

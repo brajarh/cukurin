@@ -1,6 +1,6 @@
-@include('partials.nav-admin')
+@extends('layouts.app')
+@section('content')
 <h1>Ubah Jadwal Kerja</h1>
-@include('partials.flash')
 <form method="POST" action="{{ route('jadwal.update', $j->id_schedule) }}">
     @csrf
     @method('PUT')
@@ -8,3 +8,4 @@
     <button type="submit">Perbarui</button>
     <a href="{{ route('jadwal.index') }}">Batal</a>
 </form>
+@endsection

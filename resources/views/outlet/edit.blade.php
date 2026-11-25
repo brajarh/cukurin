@@ -1,10 +1,13 @@
-@include('partials.nav-admin')
-<h1>Ubah Cabang</h1>
-@include('partials.flash')
-<form method="POST" action="{{ route('outlet.update', $o->id_outlet) }}">
+@extends('layouts.app')
+
+@section('title', 'Edit Cabang')
+
+@section('content')
+<h1 class="h3 mb-3">Edit Cabang</h1>
+
+<form method="POST" action="{{ route('outlet.update', $outlet->id_outlet) }}">
     @csrf
     @method('PUT')
     @include('outlet._form')
-    <button type="submit">Perbarui</button>
-    <a href="{{ route('outlet.index') }}">Batal</a>
 </form>
+@endsection

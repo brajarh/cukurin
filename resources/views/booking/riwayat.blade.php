@@ -1,5 +1,6 @@
+@extends('layouts.app')
+@section('content')
 <h1>Status dan Riwayat Booking</h1>
-@include('partials.flash')
 
 <form method="GET" action="{{ route('booking.riwayat') }}">
     <input name="cari" value="{{ $cari }}" placeholder="Kode booking atau nomor HP" size="30">
@@ -26,3 +27,4 @@
 
 
 <p><a href="{{ route('booking.create') }}">Booking baru</a></p>
+@endsection
