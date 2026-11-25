@@ -20,12 +20,24 @@ class Booking extends Model
     protected $table = 'booking';
     protected $primaryKey = 'id_booking';
     protected $fillable = [
-        'kode_booking', 'id_customer', 'id_barber', 'id_service',
-        'tanggal', 'jam_mulai', 'jam_selesai', 'status',
-    ];
+    'kode_booking',
+    'id_customer',
+    'id_user',
+    'id_barber',
+    'id_service',
+    'tanggal',
+    'jam_mulai',
+    'jam_selesai',
+    'status',
+];
     protected $casts = [
         'tanggal' => 'date:Y-m-d',
     ];
+
+    public function user()
+{
+    return $this->belongsTo(User::class, 'id_user');
+}
 
     public function customer()
     {
@@ -54,4 +66,5 @@ class Booking extends Model
 
         return $kode;
     }
+
 }

@@ -35,23 +35,31 @@ class BookingController extends Controller
 
     // Endpoint JSON untuk daftar jam yang masih kosong (dipanggil fetch dari JavaScript)
     public function slot(Request $request, SlotService $slot)
-    {
-        $d = $request->validate([
-            'id_barber' => 'required|integer',
-            'id_service' => 'required|integer',
-            'tanggal' => 'required|date_format:Y-m-d',
-            'abaikan' => 'nullable|integer',
-        ]);
+{
+    $d = $request->validate([
+        'id_barber' => 'required|integer',
+        'id_service' => 'required|integer',
+        'tanggal' => 'required|date_format:Y-m-d',
+        'abaikan' => 'nullable|integer',
+    ]);
 
-        return response()->json([
-            'slot' => $slot->slotTersedia(
-                (int) $d['id_barber'],
-                (int) $d['id_service'],
-                $d['tanggal'],
-                isset($d['abaikan']) ? (int) $d['abaikan'] : null
-            ),
-        ]);
+    // Tambahan pengecekan kepemilikan booking
+    if (!empty($d['abaikan'])) {
+        Booking::where('id_booking', $d['abaikan'])
+            ->where('id_user', $request->user()->id)
+            ->where('id_barber', $d['id_barber'])
+            ->firstOrFail();
     }
+
+    return response()->json([
+        'slot' => $slot->slotTersedia(
+            (int) $d['id_barber'],
+            (int) $d['id_service'],
+            $d['tanggal'],
+            isset($d['abaikan']) ? (int) $d['abaikan'] : null
+        ),
+    ]);
+}
 
     // Langkah 2: tampilkan rincian untuk diperiksa ulang
     public function konfirmasi(BookingRequest $request, SlotService $slot)
@@ -71,48 +79,68 @@ class BookingController extends Controller
 
     // Langkah 3: simpan booking (dibungkus transaction supaya tidak ada dua booking di slot yang sama)
     public function store(BookingRequest $request, SlotService $slot)
-    {
-        $d = $request->validated();
+{
+    $d = $request->validated();
+    $idUser = $request->user()->id;
 
-        $booking = DB::transaction(function () use ($d, $slot) {
-            // kunci booking barber di tanggal itu, lalu cek ulang ketersediaan
-            Booking::where('id_barber', $d['id_barber'])
-                ->where('tanggal', $d['tanggal'])
-                ->lockForUpdate()
-                ->get();
+    $booking = DB::transaction(function () use ($d, $slot, $idUser) {
 
-            if ($this->periksa($d, $slot)) {
-                return null;
-            }
+        Booking::where('id_barber', $d['id_barber'])
+            ->where('tanggal', $d['tanggal'])
+            ->lockForUpdate()
+            ->get();
 
-            $service = Service::findOrFail($d['id_service']);
-            $customer = Customer::updateOrCreate(
-                ['no_hp' => $d['no_hp']],
-                ['nama' => $d['nama']]
-            );
-
-            return Booking::create([
-                'kode_booking' => Booking::buatKode(),
-                'id_customer' => $customer->id_customer,
-                'id_barber' => $d['id_barber'],
-                'id_service' => $d['id_service'],
-                'tanggal' => $d['tanggal'],
-                'jam_mulai' => $d['jam_mulai'] . ':00',
-                'jam_selesai' => SlotService::waktu($d['tanggal'], $d['jam_mulai'])
-                    ->addMinutes((int) $service->durasi)->format('H:i:s'),
-                'status' => Booking::STATUS_DIPESAN,
-            ]);
-        });
-
-        if (!$booking) {
-            return redirect()->route('booking.create')
-                ->withInput()
-                ->withErrors(['jam_mulai' => 'Maaf, jam tersebut baru saja dipesan orang lain. Silakan pilih jam lain.']);
+        if ($this->periksa($d, $slot)) {
+            return null;
         }
 
-        return redirect()->route('booking.receipt', $booking->kode_booking)
-            ->with('success', 'Booking berhasil! Simpan kode booking kamu.');
+        $service = Service::findOrFail($d['id_service']);
+
+        $customer = Customer::firstOrCreate(
+            ['no_hp' => $d['no_hp']],
+            ['nama' => $d['nama']]
+        );
+
+        if (
+            !$customer->wasRecentlyCreated &&
+            !Booking::where('id_customer', $customer->id_customer)
+                ->where('id_user', $idUser)
+                ->exists()
+        ) {
+            throw ValidationException::withMessages([
+                'no_hp' => 'Nomor HP sudah terdaftar pada data customer lain.'
+            ]);
+        }
+
+        return Booking::create([
+            'kode_booking' => Booking::buatKode(),
+            'id_customer' => $customer->id_customer,
+            'id_user' => $idUser,
+            'id_barber' => $d['id_barber'],
+            'id_service' => $d['id_service'],
+            'tanggal' => $d['tanggal'],
+            'jam_mulai' => $d['jam_mulai'] . ':00',
+            'jam_selesai' => SlotService::waktu(
+                $d['tanggal'],
+                $d['jam_mulai']
+            )->addMinutes((int) $service->durasi)->format('H:i:s'),
+            'status' => Booking::STATUS_DIPESAN,
+        ]);
+    });
+
+    if (!$booking) {
+        return redirect()->route('booking.create')
+            ->withInput()
+            ->withErrors([
+                'jam_mulai' => 'Maaf, jam tersebut sudah tidak tersedia.'
+            ]);
     }
+
+    return redirect()->route(
+        'booking.receipt',
+        $booking->kode_booking
+    )->with('success', 'Booking berhasil! Simpan kode booking kamu.');
+}
 
     // Receipt / bukti pemesanan
     public function receipt($kode)
@@ -123,23 +151,29 @@ class BookingController extends Controller
 
     // Riwayat dan status: cari pakai kode booking atau nomor HP
     public function riwayat(Request $request)
-    {
-        $cari = trim((string) $request->query('cari'));
-        $data = collect();
+{
+    $cari = trim((string) $request->query('cari'));
 
-        if ($cari !== '') {
-            $data = Booking::with(['customer', 'barber.outlet', 'service'])
-                ->where(function ($w) use ($cari) {
-                    $w->where('kode_booking', strtoupper($cari))
-                        ->orWhereHas('customer', fn ($c) => $c->where('no_hp', $cari));
-                })
-                ->orderByDesc('tanggal')
-                ->orderByDesc('jam_mulai')
-                ->get();
-        }
+    $data = Booking::with([
+            'customer',
+            'barber.outlet',
+            'service'
+        ])
+        ->where('id_user', $request->user()->id)
+        ->when($cari !== '', function ($query) use ($cari) {
+            $query->where(function ($w) use ($cari) {
+                $w->where('kode_booking', strtoupper($cari))
+                    ->orWhereHas('customer', function ($c) use ($cari) {
+                        $c->where('no_hp', $cari);
+                    });
+            });
+        })
+        ->orderByDesc('tanggal')
+        ->orderByDesc('jam_mulai')
+        ->get();
 
-        return view('booking.riwayat', compact('data', 'cari'));
-    }
+    return view('booking.riwayat', compact('data', 'cari'));
+}
 
     public function batal($kode)
     {
@@ -213,11 +247,16 @@ class BookingController extends Controller
     // ---------- helper privat ----------
 
     private function ambil($kode): Booking
-    {
-        return Booking::with(['customer', 'barber.outlet', 'service'])
-            ->where('kode_booking', strtoupper($kode))
-            ->firstOrFail();
-    }
+{
+    return Booking::with([
+            'customer',
+            'barber.outlet',
+            'service'
+        ])
+        ->where('kode_booking', strtoupper($kode))
+        ->where('id_user', auth()->user()->id)
+        ->firstOrFail();
+}
 
     // Kembalikan pesan error (string) jika tidak valid, atau null jika aman
     private function periksa(array $d, SlotService $slot): ?string

@@ -7,7 +7,7 @@
     <button type="submit">Cari</button>
 </form>
 
-@if ($cari !== '')
+
     <table border="1" cellpadding="4">
         <tr><th>Kode</th><th>Tanggal</th><th>Jam</th><th>Layanan</th><th>Barber</th><th>Cabang</th><th>Status</th></tr>
         @forelse ($data as $b)
@@ -24,7 +24,7 @@
             <tr><td colspan="7">Booking tidak ditemukan.</td></tr>
         @endforelse
     </table>
-@endif
+
 
 <p><a href="{{ route('booking.create') }}">Booking baru</a></p>
 @endsection
