@@ -4,6 +4,7 @@ use App\Http\Controllers\AdminBookingController;
 use App\Http\Controllers\BarberController;
 use App\Http\Controllers\BarberScheduleController;
 use App\Http\Controllers\BookingController;
+use App\Http\Controllers\LaporanController;
 use App\Http\Controllers\OutletController;
 use App\Http\Controllers\PembayaranController;
 use App\Http\Controllers\ServiceController;
@@ -68,6 +69,10 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     // Transaksi T4: Daftar Ulasan (Admin)
     Route::get('/admin/ulasan', [UlasanController::class, 'index'])
         ->name('ulasan.index');
+
+        // Laporan rekap (Query Builder)
+    Route::get('/admin/laporan', [LaporanController::class, 'index'])
+        ->name('admin.laporan');
 });
 
 
