@@ -11,16 +11,22 @@ class BarberScheduleController extends Controller
 {
     public function index(Request $request)
     {
+        $cari = $request->query('q');
         $idBarber = $request->query('id_barber');
 
         $data = BarberSchedule::with('barber.outlet')
+            ->when($cari, fn ($qr) => $qr->whereHas(
+                'barber',
+                fn ($b) => $b->whereLike('nama_barber', "%{$cari}%")
+            ))
             ->when($idBarber, fn ($qr) => $qr->where('id_barber', $idBarber))
             ->orderBy('id_barber')
             ->orderBy('hari')
-            ->get();
+            ->paginate(10)
+            ->withQueryString();
         $barber = Barber::orderBy('nama_barber')->get();
 
-        return view('jadwal.index', compact('data', 'barber', 'idBarber'));
+        return view('jadwal.index', compact('data', 'barber', 'cari', 'idBarber'));
     }
 
     public function create()

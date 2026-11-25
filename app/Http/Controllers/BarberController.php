@@ -17,10 +17,11 @@ class BarberController extends Controller
         $idOutlet = $request->query('id_outlet');
 
         $data = Barber::with('outlet')
-            ->when($cari, fn ($qr) => $qr->where('nama_barber', 'like', "%{$cari}%"))
+            ->when($cari, fn ($qr) => $qr->whereLike('nama_barber', "%{$cari}%"))
             ->when($idOutlet, fn ($qr) => $qr->where('id_outlet', $idOutlet))
             ->orderBy('nama_barber')
-            ->get();
+            ->paginate(10)
+            ->withQueryString();
         $outlet = Outlet::orderBy('nama_outlet')->get();
 
         return view('barber.index', compact('data', 'outlet', 'cari', 'idOutlet'));
