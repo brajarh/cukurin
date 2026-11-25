@@ -75,4 +75,23 @@ class Booking extends Model
 {
     return $this->hasOne(Ulasan::class, 'id_booking', 'id_booking');
 }
+
+    public function detail()
+{
+    return $this->hasMany(
+        DetailBooking::class,
+        'id_booking',
+        'id_booking'
+    );
+}
+
+    public function totalHarga()
+{
+    return $this->detail->sum('harga');
+}
+
+public function totalDurasi()
+{
+    return $this->detail->sum('durasi');
+}
 }

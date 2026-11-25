@@ -87,7 +87,11 @@ Route::middleware(['auth', 'role:pelanggan'])->group(function () {
         ->name('booking.riwayat');
 
     Route::post('/booking/konfirmasi', [BookingController::class, 'konfirmasi'])
-        ->name('booking.konfirmasi');
+    ->name('booking.konfirmasi');
+
+Route::get('/booking/konfirmasi', function () {
+    return redirect()->route('booking.create');
+});
 
     Route::post('/booking', [BookingController::class, 'store'])
         ->name('booking.store');

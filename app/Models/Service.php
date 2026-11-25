@@ -16,4 +16,13 @@ class Service extends Model
     return $this->belongsToMany(Barber::class,
     'barberservice', 'id_service', 'id_barber');
     }
+
+    public function detailBooking()
+{
+    return $this->hasMany(
+        DetailBooking::class,
+        'id_service',
+        'id_service'
+    );
+}
 }
