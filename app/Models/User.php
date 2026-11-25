@@ -34,4 +34,20 @@ class User extends Authenticatable
 {
     return $this->hasOne(UserRole::class);
 }
+
+public function hasRole(string $role): bool
+{
+    return $this->userRole()
+        ->whereHas('role', function ($query) use ($role) {
+            $query->where('nama_role', $role);
+        })
+        ->exists();
+}
+
+public function booking()
+{
+    return $this->hasMany(Booking::class, 'id_user');
+}
+
+
 }
