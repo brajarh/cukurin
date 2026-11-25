@@ -1,10 +1,12 @@
 @extends('layouts.app')
+
+@section('title', 'Tambah Cabang')
+
 @section('content')
-<h1>Tambah Cabang</h1>
+<h1 class="h3 mb-3">Tambah Cabang</h1>
+
 <form method="POST" action="{{ route('outlet.store') }}">
     @csrf
     @include('outlet._form')
-    <button type="submit">Simpan</button>
-    <a href="{{ route('outlet.index') }}">Batal</a>
 </form>
 @endsection

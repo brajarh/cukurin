@@ -66,5 +66,13 @@ class Booking extends Model
 
         return $kode;
     }
+    public function pembayaran()
+{
+    return $this->hasOne(Pembayaran::class, 'id_booking', 'id_booking');
+}
 
+    public function ulasan()
+{
+    return $this->hasOne(Ulasan::class, 'id_booking', 'id_booking');
+}
 }

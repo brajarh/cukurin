@@ -14,8 +14,8 @@ class OutletRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'nama_outlet' => 'required|string|min:3|max:30',
-            'alamat_outlet' => 'required|string|min:5|max:100',
+            'nama_outlet' => 'required|string|max:30',
+            'alamat_outlet' => 'required|string|max:100',
         ];
     }
 
