@@ -2,8 +2,10 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\UserRole;
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\Response;
 
 class CekRole
@@ -11,17 +13,39 @@ class CekRole
     public function handle(
         Request $request,
         Closure $next,
-        string $role
+        ...$roles
     ): Response
     {
-        if (!$request->user()) {
+        // Pastikan pengguna sudah login
+        if (!Auth::check()) {
             return redirect()->route('login');
         }
 
-        if (!$request->user()->hasRole($role)) {
-            abort(403, 'Anda tidak memiliki akses.');
+        // Mengisi session jika belum tersedia
+        if (!$request->session()->has('user_role')) {
+
+            $ur = UserRole::with('role')
+                ->where('user_id', Auth::id())
+                ->first();
+
+            session([
+                'user_role' => $ur?->role_id,
+                'user_role_name' => $ur?->role?->nama_role,
+            ]);
         }
 
-        return $next($request);
+        // Mengambil role dari session
+        $role = (string) session('user_role');
+        $namaRole = (string) session('user_role_name');
+
+        // Memeriksa hak akses
+        if (
+            in_array($role, $roles, true) ||
+            in_array($namaRole, $roles, true)
+        ) {
+            return $next($request);
+        }
+
+        abort(403, 'Akses ditolak.');
     }
 }
