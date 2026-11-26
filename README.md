@@ -1,59 +1,139 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Cukur.in
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Aplikasi web pemesanan barbershop berbasis **Laravel 13** dan **PostgreSQL**. Pelanggan memesan satu atau beberapa layanan
+pada barber dan jam yang tersedia, lalu membayar, mengubah jadwal, dan memberi ulasan. Admin mengelola cabang, layanan,
+barber beserta jadwal kerjanya, memproses booking dan pembayaran, serta melihat laporan pendapatan.
 
-## About Laravel
+Proyek UAS mata kuliah Pengembangan Perangkat Lunak Web (Framework), kelompok 3 anggota.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Anggota dan pembagian peran
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+| Nama | NIM | Peran | Master | Transaksi | Bagian yang dikerjakan |
+|---|---|---|---|---|---|
+| Braja *(isi nama lengkap)* | *(isi)* | Anggota 1 (ketua) | M1 Layanan | T1 Booking, T2 Persetujuan Booking | Repository dan branch, autentikasi, RBAC (tabel role, middleware), seeder akun |
+| Gerry *(isi nama lengkap)* | *(isi)* | Anggota 2 | M2 Cabang (Outlet) | T3 Pembayaran, T4 Ulasan | Layout Blade, halaman Guest, dashboard tiap role |
+| Apta Manggala Ezra Salim | *(isi)* | Anggota 3 | M3 Barber (beserta Jadwal Kerja) | T5 Ubah Jadwal Booking | Pengujian otomatis, laporan Query Builder, README dan ERD, Docker (opsional) |
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## Peran pengguna (RBAC)
 
-## Learning Laravel
+Peran disimpan di tabel `roles` dan relasi `user_roles`. Akses dibatasi di sisi server dengan middleware `role:` pada route.
+Halaman yang tidak diizinkan menghasilkan respons 403, atau pengalihan ke halaman login untuk Guest.
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+| Peran | Keterangan |
+|---|---|
+| Guest | Pengunjung belum login: melihat landing (layanan, barber, cabang), login, dan registrasi |
+| Role 1: `admin` | Pengelola: mengelola master, memproses booking dan pembayaran, melihat ulasan, riwayat ubah jadwal, dan laporan |
+| Role 2: `pelanggan` | Memesan, mengubah jadwal, dan membatalkan booking miliknya, serta menulis ulasan |
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## Data master dan transaksi
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+| Kode | Nama | Pemegang | Keterangan |
+|---|---|---|---|
+| M1 | Layanan (`service`) | Braja | Nama, harga, durasi (menit) |
+| M2 | Cabang (`outlet`) | Gerry | Nama dan alamat cabang |
+| M3 | Barber (`barber`) + Jadwal Kerja (`barber_schedule`) | Apta | Barber per cabang, layanan yang dikuasai (`barberservice`), jam kerja per hari |
+| T1 | Booking (`booking` + `detail_booking`) | Braja | Pelanggan memesan banyak layanan sekaligus (header-detail, memakai `DB::transaction()`) |
+| T2 | Persetujuan Booking | Braja | Alur status oleh dua role, admin memutuskan |
+| T3 | Pembayaran (`pembayaran`) | Gerry | Admin mencatat pembayaran, status booking ikut berubah |
+| T4 | Ulasan (`ulasan`) | Gerry | Pelanggan menilai barber, rata-rata rating barber ikut diperbarui |
+| T5 | Ubah Jadwal Booking (`perubahan_jadwal`) | Apta | Pelanggan memindahkan jadwal beserta alasan, tercatat dengan pelaku dan waktunya |
+| Laporan | Rekap pendapatan (`/admin/laporan`) | Apta | Query Builder: join, `groupBy`, dan agregat |
 
-## Agentic Development
+Relasi antar master: cabang punya banyak barber (`hasMany`), barber dan layanan saling berhubungan banyak-ke-banyak
+(`belongsToMany` lewat `barberservice`). Master yang sudah dipakai transaksi tidak bisa dihapus dan menampilkan pesan yang jelas.
 
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+## Matriks hak akses
 
-```bash
-composer require laravel/boost --dev
+C = create, R = read, U = update, D = delete, - = tidak ada akses.
 
-php artisan boost:install
+| Fitur | Guest | Pelanggan (Role 2) | Admin (Role 1) |
+|---|---|---|---|
+| M1 Layanan | R (landing) | R (form booking) | C R U D |
+| M2 Cabang | R (landing) | R (form booking) | C R U D |
+| M3 Barber dan Jadwal Kerja | R (landing) | R (form booking dan pilihan jam) | C R U D |
+| T1 Booking | - | C R (miliknya), U status batal (miliknya) | R U (status) D |
+| T2 Persetujuan Booking | - | R (miliknya) | U *(sesuaikan dengan T2 Braja)* |
+| T3 Pembayaran | - | - | C R |
+| T4 Ulasan | - | C R (miliknya) | R |
+| T5 Ubah Jadwal | - | C R (miliknya) | R |
+| Laporan rekap | - | - | R |
+| Dashboard | - | R | R |
+
+## ERD
+
+![ERD Cukur.in](docs/erd.png)
+
+```mermaid
+erDiagram
+    users ||--o| user_roles : "punya"
+    roles ||--o{ user_roles : "dipakai"
+    outlet ||--o{ barber : "memiliki"
+    barber ||--o{ barberservice : ""
+    service ||--o{ barberservice : ""
+    barber ||--o{ barber_schedule : "jadwal kerja"
+    customer ||--o{ booking : ""
+    users ||--o{ booking : "memesan"
+    barber ||--o{ booking : "melayani"
+    service ||--o{ booking : "layanan utama"
+    booking ||--|{ detail_booking : "berisi"
+    service ||--o{ detail_booking : ""
+    booking ||--o| pembayaran : "dibayar"
+    users ||--o{ pembayaran : "mencatat"
+    booking ||--o| ulasan : "dinilai"
+    users ||--o{ ulasan : "menulis"
+    barber ||--o{ ulasan : "dinilai"
+    booking ||--o{ perubahan_jadwal : "diubah"
+    users ||--o{ perubahan_jadwal : "mengubah"
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+## Teknologi
 
-## Contributing
+Laravel 13, PHP 8.3 atau lebih baru, PostgreSQL, Bootstrap 5 dan Vite, Laravel UI untuk autentikasi.
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+## Instalasi dan menjalankan
 
-## Code of Conduct
+Prasyarat: PHP 8.3+ (ekstensi `pdo_pgsql` aktif), Composer, Node.js dan npm, serta PostgreSQL.
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+1. Buat database kosong di PostgreSQL, misalnya `cukurin`.
+2. Pasang dependensi dan siapkan konfigurasi:
+   ```
+   composer install
+   copy .env.example .env      (Linux/macOS: cp .env.example .env)
+   php artisan key:generate
+   ```
+3. Atur koneksi database di `.env`:
+   ```
+   DB_CONNECTION=pgsql
+   DB_HOST=127.0.0.1
+   DB_PORT=5432
+   DB_DATABASE=cukurin
+   DB_USERNAME=postgres
+   DB_PASSWORD=isi_password_anda
+   ```
+4. Buat tabel dan isi data awal dari seeder:
+   ```
+   php artisan migrate:fresh --seed
+   ```
+5. Pasang aset tampilan lalu jalankan aplikasi:
+   ```
+   npm install
+   npm run build
+   php artisan serve
+   ```
+6. Buka `http://127.0.0.1:8000`.
 
-## Security Vulnerabilities
+Menjalankan tes otomatis (memakai SQLite di memori, tidak menyentuh database Anda):
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+```
+php artisan test
+```
 
-## License
+## Akun seeder
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
-# cukurin
+| Peran | Email | Kata sandi |
+|---|---|---|
+| Admin | `admin@cukurin.test` | `admin123` |
+| Pelanggan | `pelanggan@cukurin.test` | `pelanggan123` |
+
+Seeder juga mengisi data cabang, layanan, barber, dan jadwal kerja. Data booking dan pembayaran dibuat lewat aplikasi:
+masuk sebagai pelanggan untuk memesan, lalu sebagai admin untuk mencatat pembayaran, setelah itu halaman Laporan akan terisi.

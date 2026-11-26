@@ -4,6 +4,7 @@ use App\Http\Controllers\AdminBookingController;
 use App\Http\Controllers\BarberController;
 use App\Http\Controllers\BarberScheduleController;
 use App\Http\Controllers\BookingController;
+use App\Http\Controllers\JadwalUlangController;
 use App\Http\Controllers\LaporanController;
 use App\Http\Controllers\OutletController;
 use App\Http\Controllers\PembayaranController;
@@ -73,6 +74,10 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
         // Laporan rekap (Query Builder)
     Route::get('/admin/laporan', [LaporanController::class, 'index'])
         ->name('admin.laporan');
+
+    // Transaksi T5: Riwayat perubahan jadwal booking (Admin, hanya baca)
+    Route::get('/admin/perubahan-jadwal', [JadwalUlangController::class, 'riwayat'])
+        ->name('admin.perubahan.index');
 });
 
 
@@ -104,10 +109,10 @@ Route::get('/booking/konfirmasi', function () {
     Route::get('/booking/{kode}', [BookingController::class, 'receipt'])
         ->name('booking.receipt');
 
-    Route::get('/booking/{kode}/ubah', [BookingController::class, 'ubah'])
+    Route::get('/booking/{kode}/ubah', [JadwalUlangController::class, 'ubah'])
         ->name('booking.ubah');
 
-    Route::put('/booking/{kode}', [BookingController::class, 'perbarui'])
+    Route::put('/booking/{kode}', [JadwalUlangController::class, 'perbarui'])
         ->name('booking.perbarui');
 
     Route::post('/booking/{kode}/batal', [BookingController::class, 'batal'])

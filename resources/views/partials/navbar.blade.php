@@ -33,6 +33,7 @@
                     <li class="nav-item"><a class="nav-link" href="{{ route('pembayaran.index') }}">Pembayaran</a></li>
                     <li class="nav-item"><a class="nav-link" href="{{ route('ulasan.index') }}">Ulasan</a></li>
                     <li class="nav-item"><a class="nav-link" href="{{ route('admin.laporan') }}">Laporan</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ route('admin.perubahan.index') }}">Ubah Jadwal</a></li>
                 @endif
 
                 @if ($isPelanggan)
